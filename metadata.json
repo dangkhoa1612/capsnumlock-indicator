@@ -7,5 +7,6 @@
     "46",
     "47"
   ],
+  "settings-schema": "org.gnome.shell.extensions.capsnum-indicator",
   "url": ""
 }

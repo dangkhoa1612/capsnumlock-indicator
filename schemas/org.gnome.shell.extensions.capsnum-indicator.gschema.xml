@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.capsnum-indicator" path="/org/gnome/shell/extensions/capsnum-indicator/">
+    <key name="show-caps-lock" type="b">
+      <default>true</default>
+      <summary>Show Caps Lock indicator</summary>
+      <description>Whether to show the Caps Lock indicator in the panel.</description>
+    </key>
+    <key name="show-num-lock" type="b">
+      <default>true</default>
+      <summary>Show Num Lock indicator</summary>
+      <description>Whether to show the Num Lock indicator in the panel.</description>
+    </key>
+    <key name="hide-when-off" type="b">
+      <default>false</default>
+      <summary>Hide when inactive</summary>
+      <description>Hide the indicator components entirely when the lock is turned off, rather than dimming them.</description>
+    </key>
+    <key name="use-icons" type="b">
+      <default>false</default>
+      <summary>Use system icons</summary>
+      <description>Display system lock icons instead of text labels ("A" and "1").</description>
+    </key>
+  </schema>
+</schemalist>
