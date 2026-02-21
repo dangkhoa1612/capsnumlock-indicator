@@ -135,11 +135,11 @@ const Indicator = GObject.registerClass(
             }
 
             this._capsWidget = new St.Icon({
-                icon_name: 'format-text-direction-ltr-symbolic', // Better 'A' logic graphic
+                icon_name: 'changes-prevent-symbolic', // Padlock
                 style_class: 'system-status-icon capsnum-indicator'
             });
             this._numWidget = new St.Icon({
-                icon_name: 'view-app-grid-symbolic', // Numpad grid graphic
+                icon_name: 'input-keyboard-symbolic', // Keyboard graphic
                 style_class: 'system-status-icon capsnum-indicator'
             });
 
@@ -165,7 +165,7 @@ const Indicator = GObject.registerClass(
             if (showCaps) {
                 if (capsState) {
                     this._capsWidget.show();
-                    this._capsWidget.icon_name = 'format-text-direction-ltr-symbolic';
+                    this._capsWidget.icon_name = 'changes-prevent-symbolic';
                     this._capsWidget.remove_style_class_name('capsnum-indicator-off');
                     this._capsWidget.add_style_class_name('capsnum-indicator-on');
                     this._capsWidget.ease({
@@ -183,7 +183,7 @@ const Indicator = GObject.registerClass(
                         });
                     } else {
                         this._capsWidget.show();
-                        this._capsWidget.icon_name = 'format-text-plaintext-symbolic';
+                        this._capsWidget.icon_name = 'changes-allow-symbolic';
                         this._capsWidget.remove_style_class_name('capsnum-indicator-on');
                         this._capsWidget.add_style_class_name('capsnum-indicator-off');
                         this._capsWidget.ease({
@@ -201,7 +201,7 @@ const Indicator = GObject.registerClass(
             if (showNum) {
                 if (numState) {
                     this._numWidget.show();
-                    this._numWidget.icon_name = 'view-app-grid-symbolic';
+                    this._numWidget.icon_name = 'input-keyboard-symbolic';
                     this._numWidget.remove_style_class_name('capsnum-indicator-off');
                     this._numWidget.add_style_class_name('capsnum-indicator-on');
                     this._numWidget.ease({
@@ -219,7 +219,7 @@ const Indicator = GObject.registerClass(
                         });
                     } else {
                         this._numWidget.show();
-                        this._numWidget.icon_name = 'view-grid-symbolic';
+                        this._numWidget.icon_name = 'input-keyboard-virtual-symbolic';
                         this._numWidget.remove_style_class_name('capsnum-indicator-on');
                         this._numWidget.add_style_class_name('capsnum-indicator-off');
                         this._numWidget.ease({
@@ -249,11 +249,11 @@ const Indicator = GObject.registerClass(
                 }
 
                 if (capsState !== this._lastCapsState) {
-                    let capsIcon = capsState ? 'format-text-direction-ltr-symbolic' : 'format-text-plaintext-symbolic';
+                    let capsIcon = capsState ? 'changes-prevent-symbolic' : 'changes-allow-symbolic';
                     this._customNotification.showNotification(capsIcon, 'Caps Lock ' + (capsState ? 'ON' : 'OFF'));
                 }
                 if (numState !== this._lastNumState) {
-                    let numIcon = numState ? 'view-app-grid-symbolic' : 'view-grid-symbolic';
+                    let numIcon = numState ? 'input-keyboard-symbolic' : 'input-keyboard-virtual-symbolic';
                     this._customNotification.showNotification(numIcon, 'Num Lock ' + (numState ? 'ON' : 'OFF'));
                 }
             }
