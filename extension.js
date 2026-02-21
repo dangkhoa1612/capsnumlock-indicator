@@ -215,10 +215,12 @@ const Indicator = GObject.registerClass(
                 }
 
                 if (capsState !== this._lastCapsState) {
-                    this._customNotification.showNotification('changes-prevent-symbolic', 'Caps Lock ' + (capsState ? 'ON' : 'OFF'));
+                    let capsIcon = capsState ? 'changes-prevent-symbolic' : 'changes-allow-symbolic';
+                    this._customNotification.showNotification(capsIcon, 'Caps Lock ' + (capsState ? 'ON' : 'OFF'));
                 }
                 if (numState !== this._lastNumState) {
-                    this._customNotification.showNotification('input-keyboard-symbolic', 'Num Lock ' + (numState ? 'ON' : 'OFF'));
+                    let numIcon = numState ? 'input-keyboard-symbolic' : 'input-keyboard-virtual-symbolic';
+                    this._customNotification.showNotification(numIcon, 'Num Lock ' + (numState ? 'ON' : 'OFF'));
                 }
             }
 
