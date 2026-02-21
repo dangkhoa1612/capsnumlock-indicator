@@ -3,10 +3,94 @@ import St from 'gi://St';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
+import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
 import { Extension } from 'resource:///org/gnome/shell/extensions/extension.js';
+
+// Custom Notification widget for the top-right corner
+const IndicatorNotification = GObject.registerClass(
+    class IndicatorNotification extends St.BoxLayout {
+        _init() {
+            super._init({
+                style_class: 'osd-window capsnum-notification',
+                vertical: false,
+                opacity: 0,
+                visible: false
+            });
+
+            this._icon = new St.Icon({
+                icon_name: 'changes-prevent-symbolic',
+                icon_size: 24,
+                style_class: 'capsnum-notification-icon'
+            });
+
+            this._label = new St.Label({
+                text: '',
+                y_align: Clutter.ActorAlign.CENTER,
+                style_class: 'capsnum-notification-label'
+            });
+
+            this.add_child(this._icon);
+            this.add_child(this._label);
+
+            // Add to the Main UI layout
+            Main.uiGroup.add_child(this);
+
+            this._timeoutId = 0;
+        }
+
+        showNotification(iconName, text) {
+            this._icon.icon_name = iconName;
+            this._label.text = text;
+
+            // Position in the top-right (respecting panel height and padding)
+            let primaryMonitor = Main.layoutManager.primaryMonitor;
+            let x = primaryMonitor.x + primaryMonitor.width - this.width - 20;
+            let y = primaryMonitor.y + Main.panel.height + 20;
+
+            this.set_position(x, y);
+
+            // Remove previous timeouts/animations
+            if (this._timeoutId) {
+                GLib.source_remove(this._timeoutId);
+                this._timeoutId = 0;
+            }
+
+            this.remove_all_transitions();
+            this.show();
+
+            // Fade In
+            this.ease({
+                opacity: 255,
+                duration: 200,
+                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                onComplete: () => {
+                    // Wait 1.5 seconds then fade out
+                    this._timeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
+                        this._timeoutId = 0;
+                        this.ease({
+                            opacity: 0,
+                            duration: 300,
+                            mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                            onComplete: () => this.hide()
+                        });
+                        return GLib.SOURCE_REMOVE;
+                    });
+                }
+            });
+        }
+
+        destroy() {
+            if (this._timeoutId) {
+                GLib.source_remove(this._timeoutId);
+                this._timeoutId = 0;
+            }
+            this.remove_all_transitions();
+            super.destroy();
+        }
+    });
 
 const Indicator = GObject.registerClass(
     class Indicator extends PanelMenu.Button {
@@ -185,14 +269,15 @@ const Indicator = GObject.registerClass(
             // We detect a change if our popup toggles were previously set to something else
             let showNotifications = this._settings.get_boolean('show-notifications');
             if (showNotifications && this._initialized) {
-                let monitorIndex = Main.layoutManager.primaryIndex;
+                if (!this._customNotification) {
+                    this._customNotification = new IndicatorNotification();
+                }
+
                 if (capsState !== this._lastCapsState) {
-                    let iconCaps = Gio.Icon.new_for_string('changes-prevent-symbolic');
-                    Main.osdWindowManager.show(monitorIndex, iconCaps, 'Caps Lock ' + (capsState ? 'ON' : 'OFF'), null);
+                    this._customNotification.showNotification('changes-prevent-symbolic', 'Caps Lock ' + (capsState ? 'ON' : 'OFF'));
                 }
                 if (numState !== this._lastNumState) {
-                    let iconNum = Gio.Icon.new_for_string('input-keyboard-symbolic');
-                    Main.osdWindowManager.show(monitorIndex, iconNum, 'Num Lock ' + (numState ? 'ON' : 'OFF'), null);
+                    this._customNotification.showNotification('input-keyboard-symbolic', 'Num Lock ' + (numState ? 'ON' : 'OFF'));
                 }
             }
 
@@ -211,6 +296,10 @@ const Indicator = GObject.registerClass(
             if (this._settingsChangedId) {
                 this._settings.disconnect(this._settingsChangedId);
                 this._settingsChangedId = null;
+            }
+            if (this._customNotification) {
+                this._customNotification.destroy();
+                this._customNotification = null;
             }
             super.destroy();
         }

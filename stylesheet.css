@@ -2,9 +2,28 @@
     padding: 0 4px;
     font-weight: bold;
 }
+
 .capsnum-indicator-on {
     color: white;
 }
+
 .capsnum-indicator-off {
     color: rgba(255, 255, 255, 0.3);
+}
+
+.capsnum-notification {
+    background-color: rgba(0, 0, 0, 0.85);
+    border-radius: 12px;
+    padding: 12px 18px;
+    color: white;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.capsnum-notification-icon {
+    margin-right: 12px;
+}
+
+.capsnum-notification-label {
+    font-size: 14pt;
+    font-weight: bold;
 }
