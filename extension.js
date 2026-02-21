@@ -2,6 +2,7 @@ import GObject from 'gi://GObject';
 import St from 'gi://St';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 import * as PopupMenu from 'resource:///org/gnome/shell/ui/popupMenu.js';
@@ -91,34 +92,40 @@ const Indicator = GObject.registerClass(
         }
 
         _toggleCapsLock(menuItem, state) {
+            if (this._isSyncing) return;
+            this.menu.close();
             this._emulateKeyPress(Clutter.KEY_Caps_Lock);
         }
 
         _toggleNumLock(menuItem, state) {
+            if (this._isSyncing) return;
+            this.menu.close();
             this._emulateKeyPress(Clutter.KEY_Num_Lock);
         }
 
         _emulateKeyPress(keyval) {
-            try {
-                // Determine the correct hardware keycode based on standard keyboards
-                // CapsLock typically 58, NumLock typically 69 using evdev standard
-                let keycode = (keyval === Clutter.KEY_Caps_Lock) ? 58 : 69;
+            // Emulate keypress after a short delay so the popup menu can close and release the input grab
+            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
+                try {
+                    // Initialize virtual device once if not exists
+                    if (!this._virtualDevice) {
+                        this._virtualDevice = this._seat.create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+                    }
 
-                // For GNOME 43+, creating a virtual device within the UI thread works natively on Wayland/X11
-                if (!this._virtualDevice) {
-                    this._virtualDevice = this._seat.create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+                    // Send Press and Release events
+                    this._virtualDevice.notify_keyval(Clutter.get_current_event_time(), keyval, Clutter.KeyState.PRESSED);
+                    this._virtualDevice.notify_keyval(Clutter.get_current_event_time(), keyval, Clutter.KeyState.RELEASED);
+                } catch (e) {
+                    console.error("Failed to emulate key press:", e);
+                    // Fallback to sync state if we are blocked
+                    this._syncState();
                 }
-
-                this._virtualDevice.notify_keyval(Clutter.get_current_event_time(), keyval, Clutter.KeyState.PRESSED);
-                this._virtualDevice.notify_keyval(Clutter.get_current_event_time(), keyval, Clutter.KeyState.RELEASED);
-            } catch (e) {
-                console.error("Failed to emulate key press:", e);
-                // Fallback to sync state if we are blocked
-                this._syncState();
-            }
+                return GLib.SOURCE_REMOVE;
+            });
         }
 
         _syncState() {
+            this._isSyncing = true;
             let capsState = this._keymap.get_caps_lock_state();
             let numState = this._keymap.get_num_lock_state();
             let showCaps = this._settings.get_boolean('show-caps-lock');
@@ -179,10 +186,10 @@ const Indicator = GObject.registerClass(
             let showNotifications = this._settings.get_boolean('show-notifications');
             if (showNotifications && this._initialized) {
                 if (capsState !== this._lastCapsState) {
-                    Main.notify('Caps Lock ' + (capsState ? 'ON' : 'OFF'));
+                    Main.notify('Keyboard Lock', 'Caps Lock ' + (capsState ? 'ON' : 'OFF'));
                 }
                 if (numState !== this._lastNumState) {
-                    Main.notify('Num Lock ' + (numState ? 'ON' : 'OFF'));
+                    Main.notify('Keyboard Lock', 'Num Lock ' + (numState ? 'ON' : 'OFF'));
                 }
             }
 
@@ -190,6 +197,7 @@ const Indicator = GObject.registerClass(
             this._lastCapsState = capsState;
             this._lastNumState = numState;
             this._initialized = true;
+            this._isSyncing = false;
         }
 
         destroy() {
