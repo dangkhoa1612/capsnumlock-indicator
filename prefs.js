@@ -1,10 +1,10 @@
 import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
+import Gtk from 'gi://Gtk';
 import { ExtensionPreferences, gettext as _ } from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 export default class IndicatorPreferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
-        // Create a preferences page and group
         const page = new Adw.PreferencesPage();
         const group = new Adw.PreferencesGroup({
             title: _('Indicator Behavior'),
@@ -12,47 +12,45 @@ export default class IndicatorPreferences extends ExtensionPreferences {
         });
         page.add(group);
 
-        // Get the GSettings schema
         const settings = this.getSettings('org.gnome.shell.extensions.capsnum-indicator');
 
-        // Create switch rows linked to settings keys
-        const createSwitch = (title, subtitle, key) => {
+        // Safest approach across Adw versions: ActionRow + Gtk.Switch
+        const createSwitchRow = (title, subtitle, key) => {
             const row = new Adw.ActionRow({ title, subtitle });
-            const toggle = new Adw.SwitchRow();
+            const toggle = new Gtk.Switch({
+                active: settings.get_boolean(key),
+                valign: Gtk.Align.CENTER,
+            });
 
-            // Connect switch to GSettings
             settings.bind(key, toggle, 'active', Gio.SettingsBindFlags.DEFAULT);
-            return toggle;
+            row.add_suffix(toggle);
+            row.activatable_widget = toggle;
+            return row;
         };
 
-        const showCapsRow = new Adw.SwitchRow({
-            title: _('Show Caps Lock'),
-            subtitle: _('Display the Caps Lock indicator in the top panel.')
-        });
-        settings.bind('show-caps-lock', showCapsRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(createSwitchRow(
+            _('Show Caps Lock'),
+            _('Display the Caps Lock indicator in the top panel.'),
+            'show-caps-lock'
+        ));
 
-        const showNumRow = new Adw.SwitchRow({
-            title: _('Show Num Lock'),
-            subtitle: _('Display the Num Lock indicator in the top panel.')
-        });
-        settings.bind('show-num-lock', showNumRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(createSwitchRow(
+            _('Show Num Lock'),
+            _('Display the Num Lock indicator in the top panel.'),
+            'show-num-lock'
+        ));
 
-        const hideWhenOffRow = new Adw.SwitchRow({
-            title: _('Hide when inactive'),
-            subtitle: _('Hide the indicator completely when the lock is turned off, rather than fading it.')
-        });
-        settings.bind('hide-when-off', hideWhenOffRow, 'active', Gio.SettingsBindFlags.DEFAULT);
+        group.add(createSwitchRow(
+            _('Hide when inactive'),
+            _('Hide the indicator completely when the lock is turned off.'),
+            'hide-when-off'
+        ));
 
-        const useIconsRow = new Adw.SwitchRow({
-            title: _('Use system icons'),
-            subtitle: _('Display lock icons instead of text labels ("A" and "1").')
-        });
-        settings.bind('use-icons', useIconsRow, 'active', Gio.SettingsBindFlags.DEFAULT);
-
-        group.add(showCapsRow);
-        group.add(showNumRow);
-        group.add(hideWhenOffRow);
-        group.add(useIconsRow);
+        group.add(createSwitchRow(
+            _('Use system icons'),
+            _('Display lock icons instead of text labels ("A" and "1").'),
+            'use-icons'
+        ));
 
         window.add(page);
     }
