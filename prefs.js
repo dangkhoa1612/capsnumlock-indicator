@@ -52,6 +52,12 @@ export default class IndicatorPreferences extends ExtensionPreferences {
             'use-icons'
         ));
 
+        group.add(createSwitchRow(
+            _('Show notifications'),
+            _('Display a system notification when Caps/Num Lock is toggled.'),
+            'show-notifications'
+        ));
+
         window.add(page);
     }
 }

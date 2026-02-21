@@ -91,22 +91,31 @@ const Indicator = GObject.registerClass(
         }
 
         _toggleCapsLock(menuItem, state) {
-            // Toggle the state artificially if the menu switch is clicked
-            // Note: Wayland security restricts artificial key presses in some contexts, but this may work depending on the compositor/X11
-            // Usually, a more robust way is to invoke a DBus method, but simple toggle isn't natively exposed via Keymap reliably.
-            // We will try to simulate a key press if we can, or we just rely on it working under X11.
-            // Actually, simulating key events in GNOME 45+ Wayland is very restricted. 
-            // A safer way is to just let the user know they toggled it.
-            // For now, we will leave the toggle switch to just reflect state and act as a visual hint, 
-            // as injecting key events requires `gnome-remote-desktop` DBus or `wtype` due to Wayland security.
-
-            // For this demo, we can just sync state back because we can't reliably inject keys in pure gjs on Wayland without extensions.
-            // We revert the switch state if it was toggled by the user directly.
-            this._syncState();
+            this._emulateKeyPress(Clutter.KEY_Caps_Lock);
         }
 
         _toggleNumLock(menuItem, state) {
-            this._syncState();
+            this._emulateKeyPress(Clutter.KEY_Num_Lock);
+        }
+
+        _emulateKeyPress(keyval) {
+            try {
+                // Determine the correct hardware keycode based on standard keyboards
+                // CapsLock typically 58, NumLock typically 69 using evdev standard
+                let keycode = (keyval === Clutter.KEY_Caps_Lock) ? 58 : 69;
+
+                // For GNOME 43+, creating a virtual device within the UI thread works natively on Wayland/X11
+                if (!this._virtualDevice) {
+                    this._virtualDevice = this._seat.create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
+                }
+
+                this._virtualDevice.notify_keyval(Clutter.get_current_event_time(), keyval, Clutter.KeyState.PRESSED);
+                this._virtualDevice.notify_keyval(Clutter.get_current_event_time(), keyval, Clutter.KeyState.RELEASED);
+            } catch (e) {
+                console.error("Failed to emulate key press:", e);
+                // Fallback to sync state if we are blocked
+                this._syncState();
+            }
         }
 
         _syncState() {
@@ -164,6 +173,23 @@ const Indicator = GObject.registerClass(
             } else {
                 this.show();
             }
+
+            // Fire notification if it changed externally (not via standard init)
+            // We detect a change if our popup toggles were previously set to something else
+            let showNotifications = this._settings.get_boolean('show-notifications');
+            if (showNotifications && this._initialized) {
+                if (capsState !== this._lastCapsState) {
+                    Main.notify('Caps Lock ' + (capsState ? 'ON' : 'OFF'));
+                }
+                if (numState !== this._lastNumState) {
+                    Main.notify('Num Lock ' + (numState ? 'ON' : 'OFF'));
+                }
+            }
+
+            // Save state to avoid repeated notifications
+            this._lastCapsState = capsState;
+            this._lastNumState = numState;
+            this._initialized = true;
         }
 
         destroy() {
