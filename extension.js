@@ -140,29 +140,14 @@ const Indicator = GObject.registerClass(
                 this._numWidget.destroy();
             }
 
-            const useIcons = this._settings.get_boolean('use-icons');
-
-            if (useIcons) {
-                this._capsWidget = new St.Icon({
-                    icon_name: 'changes-prevent-symbolic', // A lock icon
-                    style_class: 'system-status-icon capsnum-indicator'
-                });
-                this._numWidget = new St.Icon({
-                    icon_name: 'input-keyboard-symbolic', // Alternative icon
-                    style_class: 'system-status-icon capsnum-indicator'
-                });
-            } else {
-                this._capsWidget = new St.Label({
-                    text: 'A',
-                    y_align: Clutter.ActorAlign.CENTER,
-                    style_class: 'capsnum-indicator'
-                });
-                this._numWidget = new St.Label({
-                    text: '1',
-                    y_align: Clutter.ActorAlign.CENTER,
-                    style_class: 'capsnum-indicator'
-                });
-            }
+            this._capsWidget = new St.Icon({
+                icon_name: 'changes-prevent-symbolic', // A lock icon
+                style_class: 'system-status-icon capsnum-indicator'
+            });
+            this._numWidget = new St.Icon({
+                icon_name: 'input-keyboard-symbolic', // Alternative icon
+                style_class: 'system-status-icon capsnum-indicator'
+            });
 
             this._box.add_child(this._capsWidget);
             this._box.add_child(this._numWidget);

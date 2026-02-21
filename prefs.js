@@ -47,12 +47,6 @@ export default class IndicatorPreferences extends ExtensionPreferences {
         ));
 
         group.add(createSwitchRow(
-            _('Use system icons'),
-            _('Display lock icons instead of text labels ("A" and "1").'),
-            'use-icons'
-        ));
-
-        group.add(createSwitchRow(
             _('Show notifications'),
             _('Display a system notification when Caps/Num Lock is toggled.'),
             'show-notifications'
