@@ -163,6 +163,7 @@ const Indicator = GObject.registerClass(
 
             // Update Caps Widget
             if (showCaps) {
+                this._capsWidget.icon_name = capsState ? 'changes-prevent-symbolic' : 'changes-allow-symbolic';
                 if (capsState) {
                     this._capsWidget.show();
                     this._capsWidget.add_style_class_name('capsnum-indicator-on');
@@ -182,6 +183,7 @@ const Indicator = GObject.registerClass(
 
             // Update Num Widget
             if (showNum) {
+                this._numWidget.icon_name = numState ? 'input-keyboard-symbolic' : 'input-keyboard-virtual-symbolic';
                 if (numState) {
                     this._numWidget.show();
                     this._numWidget.add_style_class_name('capsnum-indicator-on');
