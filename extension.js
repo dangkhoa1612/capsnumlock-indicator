@@ -113,14 +113,8 @@ const Indicator = GObject.registerClass(
             this._seat = Clutter.get_default_backend().get_default_seat();
             this._keymap = this._seat.get_keymap();
 
-            // Menu items
-            this._capsSwitch = new PopupMenu.PopupSwitchMenuItem('Caps Lock', false);
-            this._capsSwitch.connect('toggled', this._toggleCapsLock.bind(this));
-            this.menu.addMenuItem(this._capsSwitch);
-
-            this._numSwitch = new PopupMenu.PopupSwitchMenuItem('Num Lock', false);
-            this._numSwitch.connect('toggled', this._toggleNumLock.bind(this));
-            this.menu.addMenuItem(this._numSwitch);
+            // Disable the click menu to make this a passive indicator
+            this.reactive = false;
 
             // Listen for keyboard state changes (Caps Lock, Num Lock)
             this._keymapStateChangedId = this._keymap.connect('state-changed', this._syncState.bind(this));
@@ -154,55 +148,18 @@ const Indicator = GObject.registerClass(
         }
 
         _onSettingsChanged() {
-            // If settings changed, we might need to recreate widgets (Text vs Icon)
             this._setupWidgets();
             this._syncState();
         }
 
-        _toggleCapsLock(menuItem, state) {
-            if (this._isSyncing) return;
-            this.menu.close();
-            this._emulateKeyPress(Clutter.KEY_Caps_Lock);
-        }
-
-        _toggleNumLock(menuItem, state) {
-            if (this._isSyncing) return;
-            this.menu.close();
-            this._emulateKeyPress(Clutter.KEY_Num_Lock);
-        }
-
-        _emulateKeyPress(keyval) {
-            // Emulate keypress after a short delay so the popup menu can close and release the input grab
-            GLib.timeout_add(GLib.PRIORITY_DEFAULT, 50, () => {
-                try {
-                    // Initialize virtual device once if not exists
-                    if (!this._virtualDevice) {
-                        this._virtualDevice = this._seat.create_virtual_device(Clutter.InputDeviceType.KEYBOARD_DEVICE);
-                    }
-
-                    // Send Press and Release events
-                    this._virtualDevice.notify_keyval(Clutter.get_current_event_time(), keyval, Clutter.KeyState.PRESSED);
-                    this._virtualDevice.notify_keyval(Clutter.get_current_event_time(), keyval, Clutter.KeyState.RELEASED);
-                } catch (e) {
-                    console.error("Failed to emulate key press:", e);
-                    // Fallback to sync state if we are blocked
-                    this._syncState();
-                }
-                return GLib.SOURCE_REMOVE;
-            });
-        }
-
         _syncState() {
-            this._isSyncing = true;
             let capsState = this._keymap.get_caps_lock_state();
             let numState = this._keymap.get_num_lock_state();
             let showCaps = this._settings.get_boolean('show-caps-lock');
             let showNum = this._settings.get_boolean('show-num-lock');
             let hideWhenOff = this._settings.get_boolean('hide-when-off');
 
-            // Update popup menu switches
-            if (this._capsSwitch) this._capsSwitch.setToggleState(capsState);
-            if (this._numSwitch) this._numSwitch.setToggleState(numState);
+
 
             // Update Caps Widget
             if (showCaps) {
@@ -269,7 +226,6 @@ const Indicator = GObject.registerClass(
             this._lastCapsState = capsState;
             this._lastNumState = numState;
             this._initialized = true;
-            this._isSyncing = false;
         }
 
         destroy() {
