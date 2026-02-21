@@ -185,11 +185,14 @@ const Indicator = GObject.registerClass(
             // We detect a change if our popup toggles were previously set to something else
             let showNotifications = this._settings.get_boolean('show-notifications');
             if (showNotifications && this._initialized) {
+                let monitorIndex = Main.layoutManager.primaryIndex;
                 if (capsState !== this._lastCapsState) {
-                    Main.notify('Keyboard Lock', 'Caps Lock ' + (capsState ? 'ON' : 'OFF'));
+                    let iconCaps = Gio.Icon.new_for_string('changes-prevent-symbolic');
+                    Main.osdWindowManager.show(monitorIndex, iconCaps, 'Caps Lock ' + (capsState ? 'ON' : 'OFF'), null);
                 }
                 if (numState !== this._lastNumState) {
-                    Main.notify('Keyboard Lock', 'Num Lock ' + (numState ? 'ON' : 'OFF'));
+                    let iconNum = Gio.Icon.new_for_string('input-keyboard-symbolic');
+                    Main.osdWindowManager.show(monitorIndex, iconNum, 'Num Lock ' + (numState ? 'ON' : 'OFF'), null);
                 }
             }
 
