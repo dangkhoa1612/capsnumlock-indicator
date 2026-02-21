@@ -163,18 +163,34 @@ const Indicator = GObject.registerClass(
 
             // Update Caps Widget
             if (showCaps) {
-                this._capsWidget.icon_name = capsState ? 'changes-prevent-symbolic' : 'changes-allow-symbolic';
                 if (capsState) {
                     this._capsWidget.show();
-                    this._capsWidget.add_style_class_name('capsnum-indicator-on');
+                    this._capsWidget.icon_name = 'changes-prevent-symbolic';
                     this._capsWidget.remove_style_class_name('capsnum-indicator-off');
+                    this._capsWidget.add_style_class_name('capsnum-indicator-on');
+                    this._capsWidget.ease({
+                        opacity: 255,
+                        duration: 200,
+                        mode: Clutter.AnimationMode.EASE_OUT_QUAD
+                    });
                 } else {
                     if (hideWhenOff) {
-                        this._capsWidget.hide();
+                        this._capsWidget.ease({
+                            opacity: 0,
+                            duration: 200,
+                            mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                            onComplete: () => this._capsWidget.hide()
+                        });
                     } else {
                         this._capsWidget.show();
-                        this._capsWidget.add_style_class_name('capsnum-indicator-off');
+                        this._capsWidget.icon_name = 'changes-allow-symbolic';
                         this._capsWidget.remove_style_class_name('capsnum-indicator-on');
+                        this._capsWidget.add_style_class_name('capsnum-indicator-off');
+                        this._capsWidget.ease({
+                            opacity: 255,
+                            duration: 200,
+                            mode: Clutter.AnimationMode.EASE_OUT_QUAD
+                        });
                     }
                 }
             } else {
@@ -183,18 +199,34 @@ const Indicator = GObject.registerClass(
 
             // Update Num Widget
             if (showNum) {
-                this._numWidget.icon_name = numState ? 'input-keyboard-symbolic' : 'input-keyboard-virtual-symbolic';
                 if (numState) {
                     this._numWidget.show();
-                    this._numWidget.add_style_class_name('capsnum-indicator-on');
+                    this._numWidget.icon_name = 'input-keyboard-symbolic';
                     this._numWidget.remove_style_class_name('capsnum-indicator-off');
+                    this._numWidget.add_style_class_name('capsnum-indicator-on');
+                    this._numWidget.ease({
+                        opacity: 255,
+                        duration: 200,
+                        mode: Clutter.AnimationMode.EASE_OUT_QUAD
+                    });
                 } else {
                     if (hideWhenOff) {
-                        this._numWidget.hide();
+                        this._numWidget.ease({
+                            opacity: 0,
+                            duration: 200,
+                            mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                            onComplete: () => this._numWidget.hide()
+                        });
                     } else {
                         this._numWidget.show();
-                        this._numWidget.add_style_class_name('capsnum-indicator-off');
+                        this._numWidget.icon_name = 'input-keyboard-virtual-symbolic';
                         this._numWidget.remove_style_class_name('capsnum-indicator-on');
+                        this._numWidget.add_style_class_name('capsnum-indicator-off');
+                        this._numWidget.ease({
+                            opacity: 255,
+                            duration: 200,
+                            mode: Clutter.AnimationMode.EASE_OUT_QUAD
+                        });
                     }
                 }
             } else {
