@@ -1,0 +1,11 @@
+{
+  "name": "Caps/Num Lock Indicator",
+  "description": "Shows the status of Caps Lock and Num Lock on the top panel.",
+  "uuid": "capsnum-indicator@felipeaupizetta",
+  "shell-version": [
+    "45",
+    "46",
+    "47"
+  ],
+  "url": ""
+}
