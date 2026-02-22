@@ -44,9 +44,12 @@ const IndicatorNotification = GObject.registerClass(
             this._icon.icon_name = iconName;
             this._label.text = text;
 
+            // Get the natural width of the notification before it is rendered/allocated
+            let [, natWidth] = this.get_preferred_width(-1);
+
             // Position in the top-right (respecting panel height and padding)
             let primaryMonitor = Main.layoutManager.primaryMonitor;
-            let x = primaryMonitor.x + primaryMonitor.width - this.width - 20;
+            let x = primaryMonitor.x + primaryMonitor.width - natWidth - 20;
             let y = primaryMonitor.y + Main.panel.height + 20;
 
             this.set_position(x, y);
