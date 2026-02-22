@@ -44,43 +44,47 @@ const IndicatorNotification = GObject.registerClass(
             this._icon.icon_name = iconName;
             this._label.text = text;
 
-            // Get the natural width of the notification before it is rendered/allocated
-            let [, natWidth] = this.get_preferred_width(-1);
-
-            // Position in the top-right (respecting panel height and padding)
-            let primaryMonitor = Main.layoutManager.primaryMonitor;
-            let x = primaryMonitor.x + primaryMonitor.width - natWidth - 20;
-            let y = primaryMonitor.y + Main.panel.height + 20;
-
-            this.set_position(x, y);
-
             // Remove previous timeouts/animations
             if (this._timeoutId) {
                 GLib.source_remove(this._timeoutId);
                 this._timeoutId = 0;
             }
-
             this.remove_all_transitions();
+
+            // Render it invisibly first so Clutter fully allocates its width
+            this.opacity = 0;
             this.show();
 
-            // Fade In
-            this.ease({
-                opacity: 255,
-                duration: 200,
-                mode: Clutter.AnimationMode.EASE_OUT_QUAD,
-                onComplete: () => {
-                    // Wait 1.5 seconds then fade out
-                    this._timeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
-                        this._timeoutId = 0;
-                        this.ease({
-                            opacity: 0,
-                            duration: 300,
-                            mode: Clutter.AnimationMode.EASE_IN_QUAD,
-                            onComplete: () => this.hide()
+            // Defer positioning and fading to the next event loop frame
+            GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
+                let primaryMonitor = Main.layoutManager.primaryMonitor;
+
+                // this.width is now 100% correctly computed by the layout manager
+                let x = primaryMonitor.x + primaryMonitor.width - this.width - 20;
+                let y = primaryMonitor.y + Main.panel.height + 20;
+
+                this.set_position(x, y);
+
+                // Fade In smoothly
+                this.ease({
+                    opacity: 255,
+                    duration: 200,
+                    mode: Clutter.AnimationMode.EASE_OUT_QUAD,
+                    onComplete: () => {
+                        // Wait 1.5 seconds then fade out
+                        this._timeoutId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1500, () => {
+                            this._timeoutId = 0;
+                            this.ease({
+                                opacity: 0,
+                                duration: 300,
+                                mode: Clutter.AnimationMode.EASE_IN_QUAD,
+                                onComplete: () => this.hide()
+                            });
+                            return GLib.SOURCE_REMOVE;
                         });
-                        return GLib.SOURCE_REMOVE;
-                    });
-                }
+                    }
+                });
+                return GLib.SOURCE_REMOVE;
             });
         }
 
